@@ -1,20 +1,18 @@
 import torch.nn as nn
 import torch.nn.functional as F
-
-# from MultiheadAttention import MultiheadAttention
+from Layers import Linear
 
 
 class TransformerEncoderLayer(nn.Module):
     def __init__(self, embedding_dim, hidden_dim, n_heads, dropout_rate=0):
         """
-        Single transformer encoder layer.
+        Single transformer encoder layer. Uses prenorm.
         Args:
             embedding_dim: d_model of transformer
             hidden_dim: ffn dimension
             n_heads: number of multihead attn heads
             dropout_rate: overall dropout rate
 
-            uses prenorm, not post-norm
         """
         super(TransformerEncoderLayer, self).__init__()
         self.dropout_rate = dropout_rate
@@ -22,9 +20,11 @@ class TransformerEncoderLayer(nn.Module):
         self.hidden_dim = hidden_dim
         self.n_heads = n_heads
 
-        self.self_attention = nn.MultiheadAttention(self.embedding_dim, self.n_heads)
-        self.fc1 = nn.Linear(self.embedding_dim, self.hidden_dim)
-        self.fc2 = nn.Linear(self.hidden_dim, self.embedding_dim)
+        self.self_attention = nn.MultiheadAttention(
+            self.embedding_dim, self.n_heads, dropout=dropout_rate
+        )
+        self.fc1 = Linear(self.embedding_dim, self.hidden_dim)
+        self.fc2 = Linear(self.hidden_dim, self.embedding_dim)
 
         self.self_attention_layer_norm = nn.LayerNorm(self.embedding_dim)
         self.final_layer_norm = nn.LayerNorm(self.embedding_dim)
@@ -46,6 +46,7 @@ class TransformerEncoderLayer(nn.Module):
         x, _ = self.self_attention(
             query=x, key=x, value=x, key_padding_mask=source_mask
         )
+        x = self.dropout(x)
         x = x + r
 
         r = x
@@ -60,14 +61,13 @@ class TransformerEncoderLayer(nn.Module):
 class TransformerDecoderLayer(nn.Module):
     def __init__(self, embedding_dim, hidden_dim, n_heads, dropout_rate=0):
         """
-        Single decoder layer.
+        Single decoder layer. Uses prenorm.
         Args:
             embedding_dim: d_model of transformer
             hidden_dim: ffn dimension
             n_heads: number of multihead attn heads
             dropout_rate: overall dropout rate
 
-            uses prenorm, not post-norm
         """
         super(TransformerDecoderLayer, self).__init__()
         self.dropout_rate = dropout_rate
@@ -75,14 +75,18 @@ class TransformerDecoderLayer(nn.Module):
         self.n_heads = n_heads
         self.hidden_dim = hidden_dim
 
-        self.self_attention = nn.MultiheadAttention(self.embedding_dim, self.n_heads,)
+        self.self_attention = nn.MultiheadAttention(
+            self.embedding_dim, self.n_heads, dropout=dropout_rate
+        )
         self.self_attention_layer_norm = nn.LayerNorm(self.embedding_dim)
 
-        self.enc_attention = nn.MultiheadAttention(self.embedding_dim, self.n_heads,)
+        self.enc_attention = nn.MultiheadAttention(
+            self.embedding_dim, self.n_heads, dropout=dropout_rate
+        )
         self.enc_attention_layer_norm = nn.LayerNorm(self.embedding_dim)
 
-        self.fc1 = nn.Linear(self.embedding_dim, self.hidden_dim)
-        self.fc2 = nn.Linear(self.hidden_dim, self.embedding_dim)
+        self.fc1 = Linear(self.embedding_dim, self.hidden_dim)
+        self.fc2 = Linear(self.hidden_dim, self.embedding_dim)
 
         self.final_layer_norm = nn.LayerNorm(self.embedding_dim)
 
