@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from utils import device
+from .utils import device
 
 
 class LearnedPositionalEmbedding(nn.Module):

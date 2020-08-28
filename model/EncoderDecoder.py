@@ -1,8 +1,8 @@
 import torch.nn as nn
 
-from Layers import Embedding
-from LearnedPositionalEmbedding import LearnedPositionalEmbedding
-from TransformerLayer import TransformerDecoderLayer, TransformerEncoderLayer
+from .Layers import Embedding
+from .LearnedPositionalEmbedding import LearnedPositionalEmbedding
+from .TransformerLayer import TransformerDecoderLayer, TransformerEncoderLayer
 
 
 class TransformerEncoder(nn.Module):
@@ -34,18 +34,13 @@ class TransformerEncoder(nn.Module):
         self.embedding_dim = embedding_dim
         self.n_layers = n_layers
 
-        self.sos_idx = 2
-        self.eos_ixd = 3
-        self.mask_idx = 0
-        self.pad_idx = 1
-
         self.embedding = Embedding(
             num_embeddings=self.vocab_size,
             embedding_dim=self.embedding_dim,
             padding_idx=pad_idx,
         )
 
-        self.pos_embedding = LearnedPositionalEmbedding(self.embedding_dim)
+        self.pos_encoding = LearnedPositionalEmbedding(self.embedding_dim)
 
         self.layers = nn.ModuleList(
             [
@@ -73,8 +68,8 @@ class TransformerEncoder(nn.Module):
 
     def embed(self, source):
         x = self.embedding(source)
-        positional_embedding = self.pos_embedding(x)
-        x += positional_embedding
+        positional_encoding = self.pos_encoding(x)
+        x += positional_encoding
         return x
 
 
@@ -113,7 +108,7 @@ class TransformerDecoder(nn.Module):
             padding_idx=pad_idx,
         )
 
-        self.pos_embedding = LearnedPositionalEmbedding(self.embedding_dim)
+        self.pos_encoding = LearnedPositionalEmbedding(self.embedding_dim)
 
         self.layers = nn.ModuleList(
             [
@@ -143,6 +138,6 @@ class TransformerDecoder(nn.Module):
 
     def embed(self, source):
         x = self.embedding(source)
-        positional_embedding = self.pos_embedding(x)
-        x += positional_embedding
+        positional_encoding = self.pos_encoding(x)
+        x += positional_encoding
         return x

@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
-from Layers import Linear
+from .Layers import Linear
 
 
 class TransformerEncoderLayer(nn.Module):

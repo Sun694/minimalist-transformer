@@ -3,9 +3,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from EncoderDecoder import TransformerEncoder, TransformerDecoder
-from Layers import Linear
-from utils import Batch, device
+from .EncoderDecoder import TransformerEncoder, TransformerDecoder
+from .Layers import Linear
+from .utils import Batch, device
 
 
 class BaseTransformer(nn.Module):
@@ -105,7 +105,7 @@ class MLT(BaseTransformer):
         Pass input through transformer and return loss, handles masking automagically
         Args:
             criterion: torch.nn.functional loss function of choice
-            sources: source sequences, [seq_len, bs, indices]
+            sources: source sequences, [seq_len, bs]
             targets: full target sequence, [seq_len, bs, embedding_dim]
 
         Returns:
@@ -124,6 +124,15 @@ class MLT(BaseTransformer):
         return loss, out
 
     def generate(self, source, source_mask, max_len):
+        """
+        Args:
+            source: input sequence indices, [seq_len, bs,
+            source_mask: the source mask to prevent attending to <pad> tokens
+            max_len: maximum length
+
+        Returns:
+            generated translations
+        """
         memory = self.encoder(source, source_mask)
         ys = torch.ones(1, source.size(1)).long().fill_(self.sos_idx).to(device)
         # max target length is 1.5x * source + 10 to save compute power
